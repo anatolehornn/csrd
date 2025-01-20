@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { parse } from 'csv-parse';
+import helmet from 'helmet';
 import fs from 'fs';
 import { apiLimiter } from './middleware/rateLimit';
 import path from 'path';
@@ -8,6 +8,7 @@ import { TaxonomyNode, TaxonomyCSVRow, Answer } from '../../shared/src/types/tax
 import { config } from './config/env';
 
 const app = express();
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use('/api', apiLimiter);
