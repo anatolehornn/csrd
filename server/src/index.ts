@@ -94,7 +94,8 @@ app.get('/api/taxonomy', async (req, res) => {
     const taxonomyTree = buildTaxonomyTree(rows);
     res.json(taxonomyTree);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to load taxonomy' });
+    console.error('Error in /api/taxonomy:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to load taxonomy' });
   }
 });
 
@@ -125,7 +126,8 @@ app.get('/api/topics', async (req, res) => {
       
     res.json(topics);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to load topics' });
+    console.error('Error in /api/topics:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to load topics' });
   }
 });
 
