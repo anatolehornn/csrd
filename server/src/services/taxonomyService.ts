@@ -1,22 +1,6 @@
-import { parse } from 'csv-parse';
-import fs from 'fs/promises';
-import { CSVParseError } from '../utils/error';
 import { TaxonomyCSVRow, TaxonomyNode } from '../../../shared/src/types/taxonomy';
+import { parseCSVFile } from '../utils/csvParser';
 
-const CSV_PARSE_OPTIONS = {
-    columns: true,
-    delimiter: ',', // Ensure this matches your CSV delimiter
-    trim: true,
-    relax_quotes: true, // Allow for more lenient quoting
-    skip_empty_lines: true, // Skip empty lines,
-    cast: (value: string | any, context: any) => {
-      if (typeof value === 'string') {
-        return value.replace(/"/g, ""); // Replace " with noting
-      }
-      return value;
-    }
-  };
-  
 export class TaxonomyService {
   private static instance: TaxonomyService;
   private cache: Map<string, any> = new Map();
@@ -37,25 +21,11 @@ export class TaxonomyService {
       return this.cache.get(cacheKey);
     }
 
-    const rows = await this.parseCSVFile(filePath);
+    const rows = await parseCSVFile<TaxonomyCSVRow>(filePath);
     const tree = this.buildTaxonomyTree(rows);
     
     this.cache.set(cacheKey, tree);
     return tree;
-  }
-
-  private async parseCSVFile(filePath: string): Promise<TaxonomyCSVRow[]> {
-    try {
-      const fileContent = await fs.readFile(filePath, 'utf-8');
-      return new Promise((resolve, reject) => {
-        parse(fileContent, CSV_PARSE_OPTIONS, (err, rows: TaxonomyCSVRow[]) => {
-          if (err) reject(new CSVParseError(err.message));
-          resolve(rows);
-        });
-      });
-    } catch (error) {
-      throw new CSVParseError(error instanceof Error ? error.message : 'Unknown error');
-    }
   }
 
   // Function to generate a unique ID for each node

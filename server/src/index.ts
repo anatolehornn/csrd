@@ -3,8 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import { apiLimiter } from './middleware/rateLimit';
+import { TaxonomyService } from './services/taxonomyService';
 import path from 'path';
-import { TaxonomyNode, TaxonomyCSVRow, Answer } from '../../shared/src/types/taxonomy';
+import { Answer } from '../../shared/src/types/taxonomy';
+import { TopicService } from './services/topicService';
 import { config } from './config/env';
 
 const app = express();
@@ -93,52 +95,37 @@ const buildTaxonomyTree = (rows: TaxonomyCSVRow[]): TaxonomyNode[] => {
 };
 
 // API endpoint to get the taxonomy tree
-app.get('/api/taxonomy', async (req, res) => {
-  try {
-    const csvFilePath = path.join(__dirname, '../../shared/src/data/taxonomy.csv');
-    const rows = await parseCSVFile(csvFilePath);
-    const taxonomyTree = buildTaxonomyTree(rows);
-    res.json(taxonomyTree);
-  } catch (error) {
-    console.error('Error in /api/taxonomy:', error);
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to load taxonomy' });
+app.get(
+  '/api/taxonomy',
+  async (_req, res, next) => {
+    try {
+      const taxonomyService = TaxonomyService.getInstance();
+      const filePath = path.join(__dirname, '../../shared/src/data/taxonomy.csv');
+      const taxonomyTree = await taxonomyService.getTaxonomyTree(filePath);
+      
+      res.json({
+        status: 'success',
+        data: taxonomyTree
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // API endpoint to get unique topics and their subtopics
-app.get('/api/topics', async (req, res) => {
+app.get('/api/topics', 
+  async (_req, res, next) => {
   try {
+    const topicService = TopicService.getInstance();
     const csvFilePath = path.join(__dirname, '../../shared/src/data/taxonomy.csv');
-    const rows = await parseCSVFile(csvFilePath);
+    const topics = await topicService.getTopics(csvFilePath);
     
-    const topicsMap = new Map<string, Set<string>>();
-
-    rows.forEach((row) => {
-      if (!topicsMap.has(row.topic)) {
-        topicsMap.set(row.topic, new Set());
-      }
-      topicsMap.get(row.topic)?.add(row.subtopic);
-    });
-      
-    const topics = Array.from(topicsMap.entries()).map(([name, subtopics]) => ({
-      id: Buffer.from(name).toString('base64'),
-      name,
-      subtopics: Array.from(subtopics).map(subtopic => ({
-        id: Buffer.from(`${subtopic}`).toString('base64'),
-        // id: Buffer.from(`${name}-${subtopic}`).toString('base64'),
-        name: subtopic
-      }))
-    }));
-      
     res.json(topics);
   } catch (error) {
-    console.error('Error in /api/topics:', error);
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to load topics' });
+    next(error);
   }
 });
-
-// In-memory storage for answers (for demonstration purposes)
-const answersStore: Record<string, string> = {};
 
 // Endpoint to save answers
 app.post('/api/answers', (req, res) => {
@@ -149,7 +136,8 @@ app.post('/api/answers', (req, res) => {
   }
 
   // Save the answer
-  answersStore[nodeId] = value;
+  const topicService = TopicService.getInstance();
+  topicService.saveAnswer(nodeId, value);
 
   res.status(201).json({ message: 'Answer saved successfully', nodeId, value });
 });
