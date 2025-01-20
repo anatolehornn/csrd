@@ -27,7 +27,7 @@ cd server && npm install
 
 2. Start the development server:
 ```bash
-npm run start --debug
+npm run start
 ```
 
 3. Install frontend dependencies
@@ -37,27 +37,15 @@ cd client && npm install --force
 
 4. Start the frontend:
 ```bash
-npm run start --debug
+npm run start
 ```
 
-5. build the backend:
-```bash
-npm run build
+5. add .env file on server/ folder with this content
 ```
-
-6. run the built backend:
-```bash
-npm run start --debug
-```
-
-7. build the frontend:
-```bash
-npm run build
-```
-
-8. run the built frontend:
-```bash
-serve -s build
+NODE_ENV=development
+PORT=3001
+RATE_LIMIT_WINDOW_MS=900000 # 15 * 60 * 1000 = 15 minutes convert to milliseconds
+RATE_LIMIT_MAX_REQUESTS=1000
 ```
 
 ## Links
