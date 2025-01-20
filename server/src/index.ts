@@ -4,7 +4,9 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { apiLimiter } from './middleware/rateLimit';
 import { errorHandler } from './middleware/errorHandler';
+import { validateRequest } from './middleware/validation';
 import { TaxonomyService } from './services/taxonomyService';
+import { z } from 'zod';
 import path from 'path';
 import { Answer } from '../../shared/src/types/taxonomy';
 import { TopicService } from './services/topicService';
@@ -19,9 +21,21 @@ app.use(compression());
 app.use(express.json());
 app.use('/api', apiLimiter);
 
+// Request validation schemas
+// const QuerySchema = z.object({
+//   query: z.object({
+//     limit: z.string().optional().transform(Number).pipe(z.number().min(1).max(100)).optional(),
+//     page: z.string().optional().transform(Number).pipe(z.number().min(1)).optional()
+//   })
+// });
+
+
+// Routes
+
 // API endpoint to get the taxonomy tree
 app.get(
   '/api/taxonomy',
+  // validateRequest(QuerySchema),
   async (_req, res, next) => {
     try {
       const taxonomyService = TaxonomyService.getInstance();
@@ -40,6 +54,7 @@ app.get(
 
 // API endpoint to get unique topics and their subtopics
 app.get('/api/topics', 
+  // validateRequest(QuerySchema),
   async (_req, res, next) => {
   try {
     const topicService = TopicService.getInstance();
@@ -53,7 +68,9 @@ app.get('/api/topics',
 });
 
 // Endpoint to save answers
-app.post('/api/answers', (req, res) => {
+app.post('/api/answers', 
+  // validateRequest(QuerySchema),
+  (req, res) => {
   const { nodeId, value }: Answer = req.body; // Assuming the request body contains nodeId and value
 
   if (!nodeId || value === undefined) {
