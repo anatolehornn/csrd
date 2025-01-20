@@ -5,6 +5,8 @@ import fs from 'fs';
 import { apiLimiter } from './middleware/rateLimit';
 import path from 'path';
 import { TaxonomyNode, TaxonomyCSVRow, Answer } from '../../shared/src/types/taxonomy';
+import { config } from './config/env';
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -150,7 +152,6 @@ app.post('/api/answers', (req, res) => {
   res.status(201).json({ message: 'Answer saved successfully', nodeId, value });
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(config.PORT, () => {
+  console.log(`Server is running on port ${config.PORT}`);
 }); 
