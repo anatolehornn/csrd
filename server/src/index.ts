@@ -48,6 +48,10 @@ const parseCSVFile = async (filePath: string): Promise<TaxonomyCSVRow[]> => {
 
 // Function to build the taxonomy tree
 const buildTaxonomyTree = (rows: TaxonomyCSVRow[]): TaxonomyNode[] => {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error('Invalid or empty input data');
+  }
+
   const tree: TaxonomyNode[] = [];
   const nodeMap = new Map<string, TaxonomyNode>();
   
