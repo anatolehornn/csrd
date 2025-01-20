@@ -142,6 +142,15 @@ app.post('/api/answers', (req, res) => {
 
   res.status(201).json({ message: 'Answer saved successfully', nodeId, value });
 });
+
+// 404 handler
+app.use((_req, res) => {
+  res.status(404).json({
+    status: 'error',
+    message: 'Route not found'
+  });
+});
+
 // Error handling middleware (should be last)
 app.use(errorHandler);
 
