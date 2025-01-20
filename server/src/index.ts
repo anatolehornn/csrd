@@ -15,6 +15,21 @@ const generateNodeId = (topic: string, subtopic: string, label: string): string 
   return Buffer.from(`${topic}-${subtopic}-${label}`).toString('base64');
 };
 
+// Common CSV parsing options
+const CSV_PARSE_OPTIONS = {
+  columns: true,
+  delimiter: ',', // Ensure this matches your CSV delimiter
+  trim: true,
+  relax_quotes: true, // Allow for more lenient quoting
+  skip_empty_lines: true, // Skip empty lines,
+  cast: (value: string | any, context: any) => {
+    if (typeof value === 'string') {
+      return value.replace(/"/g, ""); // Replace " with noting
+    }
+    return value;
+  }
+};
+
 // Function to build the taxonomy tree
 const buildTaxonomyTree = (rows: TaxonomyCSVRow[]): TaxonomyNode[] => {
   const tree: TaxonomyNode[] = [];
@@ -57,19 +72,7 @@ app.get('/api/taxonomy', async (req, res) => {
     const csvFilePath = path.join(__dirname, '../../shared/src/data/taxonomy.csv');
     const fileContent = fs.readFileSync(csvFilePath, 'utf-8');
     
-    parse(fileContent, {
-      columns: true,
-      delimiter: ',', // Ensure this matches your CSV delimiter
-      trim: true,
-      relax_quotes: true, // Allow for more lenient quoting
-      skip_empty_lines: true, // Skip empty lines,
-      cast: (value, context) => {
-        if (typeof value === 'string') {
-          return value.replace(/"/g, ""); // Replace " with noting
-        }
-        return value;
-      }
-    }, (err, rows: TaxonomyCSVRow[]) => {
+    parse(fileContent, CSV_PARSE_OPTIONS, (err, rows: TaxonomyCSVRow[]) => {
       if (err) {
         console.error('Error parsing CSV:', err);
         return res.status(500).json({ error: 'Failed to parse CSV' });
@@ -88,10 +91,7 @@ app.get('/api/topics', async (req, res) => {
     const csvFilePath = path.join(__dirname, '../../shared/src/data/taxonomy.csv');
     const fileContent = fs.readFileSync(csvFilePath, 'utf-8');
     
-    parse(fileContent, {
-      columns: true,
-      delimiter: ',',
-    }, (err, rows: TaxonomyCSVRow[]) => {
+    parse(fileContent, CSV_PARSE_OPTIONS, (err, rows: TaxonomyCSVRow[]) => {
       if (err) throw err;
       
       const topicsMap = new Map<string, Set<string>>();
