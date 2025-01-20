@@ -25,8 +25,14 @@ A web application for companies to comply with CSRD (Corporate Sustainability Re
 cd server && npm install
 ```
 
-2. Start the development server:
+2. Start the dev server:
 ```bash
+npm run dev
+```
+
+2. or start the build server: 
+```bash
+npm run build 
 npm run start
 ```
 
