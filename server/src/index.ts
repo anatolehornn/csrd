@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import { apiLimiter } from './middleware/rateLimit';
+import { errorHandler } from './middleware/errorHandler';
 import { TaxonomyService } from './services/taxonomyService';
 import path from 'path';
 import { Answer } from '../../shared/src/types/taxonomy';
@@ -141,6 +142,8 @@ app.post('/api/answers', (req, res) => {
 
   res.status(201).json({ message: 'Answer saved successfully', nodeId, value });
 });
+// Error handling middleware (should be last)
+app.use(errorHandler);
 
 app.listen(config.PORT, () => {
   console.log(`Server is running on port ${config.PORT}`);
