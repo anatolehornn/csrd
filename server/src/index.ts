@@ -30,6 +30,22 @@ const CSV_PARSE_OPTIONS = {
   }
 };
 
+// Utility function to read and parse CSV
+const parseCSVFile = async (filePath: string): Promise<TaxonomyCSVRow[]> => {
+  try {
+    const fileContent = await fs.promises.readFile(filePath, 'utf-8');
+    return new Promise((resolve, reject) => {
+      parse(fileContent, CSV_PARSE_OPTIONS, (err, rows: TaxonomyCSVRow[]) => {
+        if (err) reject(err);
+        resolve(rows);
+      });
+    });
+  } catch (error) {
+    console.error('Error reading or parsing CSV:', error);
+    throw new Error('Failed to process CSV file');
+  }
+};
+
 // Function to build the taxonomy tree
 const buildTaxonomyTree = (rows: TaxonomyCSVRow[]): TaxonomyNode[] => {
   const tree: TaxonomyNode[] = [];
@@ -70,16 +86,9 @@ const buildTaxonomyTree = (rows: TaxonomyCSVRow[]): TaxonomyNode[] => {
 app.get('/api/taxonomy', async (req, res) => {
   try {
     const csvFilePath = path.join(__dirname, '../../shared/src/data/taxonomy.csv');
-    const fileContent = fs.readFileSync(csvFilePath, 'utf-8');
-    
-    parse(fileContent, CSV_PARSE_OPTIONS, (err, rows: TaxonomyCSVRow[]) => {
-      if (err) {
-        console.error('Error parsing CSV:', err);
-        return res.status(500).json({ error: 'Failed to parse CSV' });
-      }
-      const taxonomyTree = buildTaxonomyTree(rows);
-      res.json(taxonomyTree);
-    });
+    const rows = await parseCSVFile(csvFilePath);
+    const taxonomyTree = buildTaxonomyTree(rows);
+    res.json(taxonomyTree);
   } catch (error) {
     res.status(500).json({ error: 'Failed to load taxonomy' });
   }
@@ -89,32 +98,28 @@ app.get('/api/taxonomy', async (req, res) => {
 app.get('/api/topics', async (req, res) => {
   try {
     const csvFilePath = path.join(__dirname, '../../shared/src/data/taxonomy.csv');
-    const fileContent = fs.readFileSync(csvFilePath, 'utf-8');
+    const rows = await parseCSVFile(csvFilePath);
     
-    parse(fileContent, CSV_PARSE_OPTIONS, (err, rows: TaxonomyCSVRow[]) => {
-      if (err) throw err;
-      
-      const topicsMap = new Map<string, Set<string>>();
-      
-      rows.forEach((row) => {
-        if (!topicsMap.has(row.topic)) {
-          topicsMap.set(row.topic, new Set());
-        }
-        topicsMap.get(row.topic)?.add(row.subtopic);
-      });
-      
-      const topics = Array.from(topicsMap.entries()).map(([name, subtopics]) => ({
-        id: Buffer.from(name).toString('base64'),
-        name,
-        subtopics: Array.from(subtopics).map(subtopic => ({
-          id: Buffer.from(`${subtopic}`).toString('base64'),
-          // id: Buffer.from(`${name}-${subtopic}`).toString('base64'),
-          name: subtopic
-        }))
-      }));
-      
-      res.json(topics);
+    const topicsMap = new Map<string, Set<string>>();
+
+    rows.forEach((row) => {
+      if (!topicsMap.has(row.topic)) {
+        topicsMap.set(row.topic, new Set());
+      }
+      topicsMap.get(row.topic)?.add(row.subtopic);
     });
+      
+    const topics = Array.from(topicsMap.entries()).map(([name, subtopics]) => ({
+      id: Buffer.from(name).toString('base64'),
+      name,
+      subtopics: Array.from(subtopics).map(subtopic => ({
+        id: Buffer.from(`${subtopic}`).toString('base64'),
+        // id: Buffer.from(`${name}-${subtopic}`).toString('base64'),
+        name: subtopic
+      }))
+    }));
+      
+    res.json(topics);
   } catch (error) {
     res.status(500).json({ error: 'Failed to load topics' });
   }
