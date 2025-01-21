@@ -42,8 +42,12 @@ function App() {
     setSelectedSubtopic('');
   };
 
-  const handleSubtopicChange = (event: SelectChangeEvent) => {
+  const handleSubtopicChange = async (event: SelectChangeEvent) => {
     setSelectedSubtopic(event.target.value);
+    const currentQuestions = taxonomy.filter(
+      node => node.topic === selectedTopic && node.subtopic === event.target.value
+    );
+    await loadAnswers(currentQuestions);
   };
 
   const handleAnswerChange = (nodeId: string, value: string) => {
@@ -58,6 +62,29 @@ function App() {
     return taxonomy.filter(
       node => node.topic === selectedTopic && node.subtopic === selectedSubtopic
     );
+  };
+
+  const loadAnswers = async (questions: TaxonomyNode[]) => {
+    const loadedAnswers: Record<string, string> = {};
+    
+    const loadAnswersRecursive = async (nodes: TaxonomyNode[]) => {
+      for (const node of nodes) {
+        try {
+          const answer = await api.getAnswer(node.id);
+          if (answer !== undefined) {
+            loadedAnswers[node.id] = answer;
+          }
+        } catch (error) {
+          console.error(`Error loading answer for node ${node.id}:`, error);
+        }
+        if (node.children.length > 0) {
+          await loadAnswersRecursive(node.children);
+        }
+      }
+    };
+  
+    await loadAnswersRecursive(questions);
+    setAnswers(loadedAnswers);
   };
 
   const renderQuestions = (nodes: TaxonomyNode[], level = 0) => {

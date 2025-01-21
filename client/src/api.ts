@@ -41,5 +41,21 @@ export const api = {
       console.error('Error saving answers:', error);
       throw error;
     }
+  },
+
+  async getAnswer(nodeId: string): Promise<string | undefined> {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/answers/${nodeId}`);
+      if (response.status === 200) {
+        return response.data.value;
+      }
+      return undefined;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        return undefined;
+      }
+      console.error('Error fetching answer:', error);
+      throw error;
+    }
   }
 }; 
