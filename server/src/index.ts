@@ -5,6 +5,7 @@ import compression from 'compression';
 import { apiLimiter } from './middleware/rateLimit';
 import { errorHandler } from './middleware/errorHandler';
 import { validateRequest } from './middleware/validation';
+import { TaxonomyController } from './controllers/taxonomyController';
 import { TaxonomyService } from './services/taxonomyService';
 import { z } from 'zod';
 import path from 'path';
@@ -31,58 +32,24 @@ app.use('/api', apiLimiter);
 
 
 // Routes
-
 // API endpoint to get the taxonomy tree
-app.get(
-  '/api/taxonomy',
-  // validateRequest(QuerySchema),
-  async (_req, res, next) => {
-    try {
-      const taxonomyService = TaxonomyService.getInstance();
-      const filePath = path.join(__dirname, '../../shared/src/data/taxonomy.csv');
-      const taxonomyTree = await taxonomyService.getTaxonomyTree(filePath);
-      
-      res.json({
-        status: 'success',
-        data: taxonomyTree
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
+app.get('/api/taxonomy', TaxonomyController.getTaxonomy); 
 
 // API endpoint to get unique topics and their subtopics
-app.get('/api/topics', 
-  // validateRequest(QuerySchema),
-  async (_req, res, next) => {
-  try {
-    const topicService = TopicService.getInstance();
-    const csvFilePath = path.join(__dirname, '../../shared/src/data/taxonomy.csv');
-    const topics = await topicService.getTopics(csvFilePath);
-    
-    res.json(topics);
-  } catch (error) {
-    next(error);
-  }
-});
+app.get('/api/topics', TaxonomyController.getTopics); 
 
-// Endpoint to save answers
-app.post('/api/answers', 
-  // validateRequest(QuerySchema),
-  (req, res) => {
-  const { nodeId, value }: Answer = req.body; // Assuming the request body contains nodeId and value
+// API endpoint to get unique topics and their subtopics
+app.post('/api/answers', TaxonomyController.saveAnswer);
 
-  if (!nodeId || value === undefined) {
-    return res.status(400).json({ error: 'nodeId and value are required' });
-  }
+// API endpoint get answer 
+app.get('/api/answers/:nodeId', TaxonomyController.getAnswer);
 
-  // Save the answer
-  const topicService = TopicService.getInstance();
-  topicService.saveAnswer(nodeId, value);
+// API endpoint to get answers for multiple nodes
+app.get('/api/answers', TaxonomyController.getAnswers);
 
-  res.status(201).json({ message: 'Answer saved successfully', nodeId, value });
-});
+// API endpoint to save multiple answers
+app.post('/api/answers/bulk', TaxonomyController.saveAnswers);
+
 
 // 404 handler
 app.use((_req, res) => {
