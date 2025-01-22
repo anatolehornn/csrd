@@ -30,13 +30,12 @@ app.use('/api', apiLimiter);
 //   })
 // });
 
-
 // Routes
 app.get('/api/taxonomy', TaxonomyController.getTaxonomy); 
 app.get('/api/topics', TaxonomyController.getTopics); 
 app.post('/api/answers', TaxonomyController.saveAnswer);
 app.get('/api/answers/:nodeId', TaxonomyController.getAnswer);
-app.get('/api/answers', TaxonomyController.getAnswers);
+app.post('/api/search-answers', TaxonomyController.searchAnswers);
 app.post('/api/answers/bulk', TaxonomyController.saveAnswers);
 
 // 404 handler

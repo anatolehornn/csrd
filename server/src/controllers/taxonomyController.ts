@@ -62,11 +62,11 @@ export class TaxonomyController {
     res.json({ nodeId, value: answer });
   }
 
-  static async getAnswers(req: Request, res: Response) {
-    const nodeIds = req.query.nodeIds as string;
+  static async searchAnswers(req: Request, res: Response) {
+    const nodeIds = req.body as string;
   
     if (!nodeIds) {
-      return res.status(400).json({ error: 'nodeIds query parameter is required' });
+      return res.status(400).json({ error: 'nodes are required' });
     }
   
     const nodeIdArray = nodeIds.split(',');

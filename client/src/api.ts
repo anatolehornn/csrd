@@ -59,10 +59,8 @@ export const api = {
     }
   },
 
-  getAnswers: async (nodeIds: string[]): Promise<Record<string, string>> => {
-    const response = await axios.get(`${API_BASE_URL}/answers`, {
-      params: { nodeIds: nodeIds.join(',') }
-    });
+  searchAnswers: async (nodeIds: string[]): Promise<Record<string, string>> => {
+    const response = await axios.post(`${API_BASE_URL}/search-answers/`, nodeIds);
     if (response.status === 200) {
       return response.data;
     }

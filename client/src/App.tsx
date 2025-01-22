@@ -79,7 +79,7 @@ function App() {
       collectNodeIds(questions);
   
       // Fetch all answers in a single API call
-      const loadedAnswers = await api.getAnswers(nodeIds);
+      const loadedAnswers = await api.searchAnswers(nodeIds);
       console.log('loadedAnswers', loadedAnswers)
       setAnswers(loadedAnswers);
     } catch (error) {
