@@ -61,6 +61,53 @@ export class TaxonomyController {
 
     res.json({ nodeId, value: answer });
   }
+
+  static async getAnswers(req: Request, res: Response) {
+    const nodeIds = req.query.nodeIds as string;
   
+    if (!nodeIds) {
+      return res.status(400).json({ error: 'nodeIds query parameter is required' });
+    }
   
+    const nodeIdArray = nodeIds.split(',');
+    const topicService = TopicService.getInstance();
+    const answers: Record<string, string> = {};
+  
+    nodeIdArray.forEach(nodeId => {
+      const answer = topicService.getAnswer(nodeId);
+      if (answer !== undefined) {
+        answers[nodeId] = answer;
+      }
+    });
+  
+    res.json(answers);
+  }
+  
+  static async saveAnswers(req: Request, res: Response) {
+    const { answers } = req.body;
+    console.log('hi');
+  
+    if (!answers || typeof answers !== 'object') {
+      return res.status(400).json({ error: 'answers object is required' });
+    }
+  
+    const topicService = TopicService.getInstance();
+    try {
+      Object.entries(answers).forEach(([nodeId, value]) => {
+        topicService.saveAnswer(nodeId, value as string);
+      });
+
+      res.status(201).json({
+        message: 'Answers saved successfully', 
+        count: Object.keys(answers).length 
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        error: 'Failed to save answers', 
+        message: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  }
+  
+
 }

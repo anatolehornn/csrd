@@ -65,26 +65,27 @@ function App() {
   };
 
   const loadAnswers = async (questions: TaxonomyNode[]) => {
-    const loadedAnswers: Record<string, string> = {};
-    
-    const loadAnswersRecursive = async (nodes: TaxonomyNode[]) => {
-      for (const node of nodes) {
-        try {
-          const answer = await api.getAnswer(node.id);
-          if (answer !== undefined) {
-            loadedAnswers[node.id] = answer;
+    try {
+      // Get all nodeIds from the questions and their children
+      const nodeIds: string[] = [];
+      const collectNodeIds = (nodes: TaxonomyNode[]) => {
+        nodes.forEach(node => {
+          nodeIds.push(node.id);
+          if (node.children.length > 0) {
+            collectNodeIds(node.children);
           }
-        } catch (error) {
-          console.error(`Error loading answer for node ${node.id}:`, error);
-        }
-        if (node.children.length > 0) {
-          await loadAnswersRecursive(node.children);
-        }
-      }
-    };
+        });
+      };
+      collectNodeIds(questions);
   
-    await loadAnswersRecursive(questions);
-    setAnswers(loadedAnswers);
+      // Fetch all answers in a single API call
+      const loadedAnswers = await api.getAnswers(nodeIds);
+      console.log('loadedAnswers', loadedAnswers)
+      setAnswers(loadedAnswers);
+    } catch (error) {
+      console.error('Error loading answers:', error);
+      setMessage({ text: 'Error loading answers', severity: 'error' });
+    }
   };
 
   const renderQuestions = (nodes: TaxonomyNode[], level = 0) => {
@@ -115,11 +116,8 @@ function App() {
 
   const saveAnswers = async () => {
     try {
-      await Promise.all(
-        Object.entries(answers).map(([nodeId, value]) => 
-          api.saveAnswers({ nodeId, value })
-        )
-      );
+      // Save all answers in a single API call
+      await api.saveAnswersBulk(answers);
       setMessage({ text: 'All answers saved successfully', severity: 'success' });
     } catch (error: any) {
       setMessage({ text: 'Error saving answers: ' + error.message, severity: 'error' });

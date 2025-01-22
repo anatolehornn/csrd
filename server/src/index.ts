@@ -32,24 +32,12 @@ app.use('/api', apiLimiter);
 
 
 // Routes
-// API endpoint to get the taxonomy tree
 app.get('/api/taxonomy', TaxonomyController.getTaxonomy); 
-
-// API endpoint to get unique topics and their subtopics
 app.get('/api/topics', TaxonomyController.getTopics); 
-
-// API endpoint to get unique topics and their subtopics
 app.post('/api/answers', TaxonomyController.saveAnswer);
-
-// API endpoint get answer 
 app.get('/api/answers/:nodeId', TaxonomyController.getAnswer);
-
-// API endpoint to get answers for multiple nodes
 app.get('/api/answers', TaxonomyController.getAnswers);
-
-// API endpoint to save multiple answers
 app.post('/api/answers/bulk', TaxonomyController.saveAnswers);
-
 
 // 404 handler
 app.use((_req, res) => {

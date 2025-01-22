@@ -57,5 +57,22 @@ export const api = {
       console.error('Error fetching answer:', error);
       throw error;
     }
-  }
+  },
+
+  getAnswers: async (nodeIds: string[]): Promise<Record<string, string>> => {
+    const response = await axios.get(`${API_BASE_URL}/answers`, {
+      params: { nodeIds: nodeIds.join(',') }
+    });
+    if (response.status === 200) {
+      return response.data;
+    }
+    throw new Error('Failed to fetch answers');
+  },
+
+  saveAnswersBulk: async (answers: Record<string, string>): Promise<void> => {
+    const response = await axios.post(`${API_BASE_URL}/answers/bulk`, { answers });
+    if (response.status !== 200 && response.status !== 201) {
+      throw new Error('Failed to save answers');
+    }
+  },
 }; 
